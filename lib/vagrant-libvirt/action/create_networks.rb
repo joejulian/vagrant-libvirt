@@ -69,7 +69,7 @@ module VagrantPlugins
                 handle_network_name_option
               end
 
-              autostart_network if !@interface_network[:autostart]
+              autostart_network if @interface_network[:autostart]
               activate_network if !@interface_network[:active]
             end
           end

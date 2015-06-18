@@ -6,5 +6,8 @@
   <target dev='vnet<%= @iface_number %>'/>
   <alias name='net<%= @iface_number %>'/>
   <model type='<%=@model_type%>'/>
+  <% if @boot_order %>
+      <boot order='<%= @boot_order %>'/>
+  <% end %>
 </interface>
 

@@ -27,14 +27,6 @@
         <type>hvm</type>
       <% end %>
     <% end %>
-    <% if @boot_order.count >= 1 %>
-      <% @boot_order.each do |b| %>
-        <boot dev='<%= b %>'/>
-      <% end %> 
-      <bootmenu enable='yes'/>
-    <% else %>
-      <boot dev='hd' />
-    <% end %>
     <kernel><%= @kernel %></kernel>
     <initrd><%= @initrd %></initrd>
     <cmdline><%= @cmd_line %></cmdline>
@@ -51,6 +43,7 @@
       <source file='<%= @domain_volume_path %>'/>
       <%# we need to ensure a unique target dev -%>
       <target dev='vda' bus='<%= @disk_bus %>'/>
+      <boot order='99'/>
     </disk>
 <%# additional disks -%>
 <% @disks.each do |d| -%>
