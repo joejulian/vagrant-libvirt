@@ -170,7 +170,9 @@ end
 * `video_vram` - Used by some graphics card types to vary the amount of RAM dedicated to video.  Defaults to 9216.
 * `machine` - Sets machine type. Equivalent to qemu `-machine`. Use `qemu-system-x86_64 -machine help` to get a list of supported machines.
 * `machine_arch` - Sets machine architecture. This helps libvirt to determine the correct emulator type. Possible values depend on your version of qemu. For possible values, see which emulator executable `qemu-system-*` your system provides. Common examples are `aarch64`, `alpha`, `arm`, `cris`, `i386`, `lm32`, `m68k`, `microblaze`, `microblazeel`, `mips`, `mips64`, `mips64el`, `mipsel`, `moxie`, `or32`, `ppc`, `ppc64`, `ppcemb`, `s390x`, `sh4`, `sh4eb`, `sparc`, `sparc64`, `tricore`, `unicore32`, `x86_64`, `xtensa`, `xtensaeb`.
+* `machine_virtual_size` - Sets the disk size in GB for the machine overriding the default specified in the box. Allows boxes to defined with a minimal size disk by default and to be grown to a larger size at creation time. Will ignore sizes smaller than the size specified by the box metadata. Note that currently there is no support for automatically resizing the filesystem to take advantage of the larger disk.
 * `boot` - Change the boot order and enables the boot menu. Possible options are "hd" or "network". Defaults to "hd" with boot menu disabled.
+* `nic_adapter_count` - Defaults to '8'. Only use case for increasing this count is for VMs that virtualize switches such as Cumulus Linux. Max value for Cumulus Linux VMs is 33.
 
 
 Specific domain settings can be set for each domain separately in multi-VM
@@ -212,7 +214,11 @@ Vagrant.configure("2") do |config|
 ## Networks
 
 Networking features in the form of `config.vm.network` support private networks
-concept.
+concept. It supports both the virtual network switch routing types and the point to
+point Guest OS to Guest OS setting using TCP tunnel interfaces.
+
+http://wiki.libvirt.org/page/VirtualNetworking
+https://libvirt.org/formatdomain.html#elementsNICSTCP
 
 Public Network interfaces are currently implemented using the macvtap driver. The macvtap
 driver is only available with the Linux Kernel version >= 2.6.24. See the following libvirt
@@ -220,13 +226,32 @@ documentation for the details of the macvtap usage.
 
 http://www.libvirt.org/formatdomain.html#elementsNICSDirect
 
+
 An examples of network interface definitions:
 
 ```ruby
-  # Private network
+  # Private network using virtual network switching
   config.vm.define :test_vm1 do |test_vm1|
     test_vm1.vm.network :private_network, :ip => "10.20.30.40"
   end
+
+  # Private network. Point to Point between 2 Guest OS using a TCP tunnel
+  # Guest 1
+  config.vm.define :test_vm1 do |test_vm1|
+    test_vm1.vm.network :private_network,
+          :libvirt__tcp_tunnel_type => 'server',
+          # default is 127.0.0.1 if omitted
+          # :libvirt__tcp_tunnel_ip => '127.0.0.1',
+          :libvirt__tcp_tunnel_port => '11111'
+
+  # Guest 2
+  config.vm.define :test_vm2 do |test_vm2|
+    test_vm2.vm.network :private_network,
+          :libvirt__tcp_tunnel_type => 'client',
+          # default is 127.0.0.1 if omitted
+          # :libvirt__tcp_tunnel_ip => '127.0.0.1',
+          :libvirt__tcp_tunnel_port => '11111'
+
 
   # Public Network
   config.vm.define :test_vm1 do |test_vm1|
@@ -289,8 +314,18 @@ starts with 'libvirt__' string. Here is a list of those options:
 * `:libvirt__forward_device` - Name of interface/device, where network should
   be forwarded (NATed or routed). Used only when creating new network. By
   default, all physical interfaces are used.
+* `:libvirt_tcp_tunnel_type` - Set it to "server" or "client" to enable TCP
+  tunnel interface configuration. This configuration type uses TCP tunnels to
+  generate point to point connections between Guests. Useful for Switch VMs like
+  Cumulus Linux. No virtual switch setting like "libvirt__network_name" applies with TCP
+  tunnel interfaces and will be ignored if configured.
+* `:libvirt_tcp_tunnel_ip` - Sets the source IP of the TCP Tunnel interface. By
+  default this is `127.0.0.1`
+* `:libvirt_tcp_tunnel_port` - Sets the TCP Tunnel interface port that either
+  the client will connect to, or the server will listen on.
 * `:mac` - MAC address for the interface.
 * `:model_type` - parameter specifies the model of the network adapter when you create a domain value by default virtio KVM believe possible values, see the documentation for libvirt
+
 
 When the option `:libvirt__dhcp_enabled` is to to 'false' it shouldn't matter
 whether the virtual network contains a DHCP server or not and vagrant-libvirt

@@ -58,6 +58,7 @@ module VagrantPlugins
       attr_accessor :boot_order
       attr_accessor :machine_type
       attr_accessor :machine_arch
+      attr_accessor :machine_virtual_size
       attr_accessor :disk_bus
       attr_accessor :nic_model_type
       attr_accessor :nested
@@ -73,6 +74,11 @@ module VagrantPlugins
       attr_accessor :video_type
       attr_accessor :video_vram
       attr_accessor :keymap
+
+      # Sets the max number of NICs that can be created
+      # Default set to 8. Don't change the default unless you know
+      # what are doing
+      attr_accessor :nic_adapter_count
 
       # Storage
       attr_accessor :disks
@@ -98,6 +104,7 @@ module VagrantPlugins
         @cpu_mode          = UNSET_VALUE
         @machine_type      = UNSET_VALUE
         @machine_arch      = UNSET_VALUE
+        @machine_virtual_size = UNSET_VALUE
         @disk_bus          = UNSET_VALUE
         @nic_model_type    = UNSET_VALUE
         @nested            = UNSET_VALUE
@@ -114,13 +121,15 @@ module VagrantPlugins
         @video_vram        = UNSET_VALUE
         @keymap            = UNSET_VALUE
 
+        @nic_adapter_count = UNSET_VALUE
+
         # Boot order
         @boot_order = []
         # Storage
         @disks             = []
         @cdroms			       = []
       end
-      
+
       def boot(device)
         @boot_order << device	# append
       end
@@ -287,6 +296,7 @@ module VagrantPlugins
         @cpu_mode = 'host-model' if @cpu_mode == UNSET_VALUE
         @machine_type = nil if @machine_type == UNSET_VALUE
         @machine_arch = nil if @machine_arch == UNSET_VALUE
+        @machine_virtual_size = nil if @machine_virtual_size == UNSET_VALUE
         @disk_bus = 'virtio' if @disk_bus == UNSET_VALUE
         @nic_model_type = 'virtio' if @nic_model_type == UNSET_VALUE
         @nested = false if @nested == UNSET_VALUE
@@ -306,7 +316,8 @@ module VagrantPlugins
         @video_type = 'cirrus' if @video_type == UNSET_VALUE
         @video_vram = 9216 if @video_vram == UNSET_VALUE
         @keymap = 'en-us' if @keymap == UNSET_VALUE
-        
+        @nic_adapter_count = 8 if @nic_adapter_count == UNSET_VALUE
+
         # Boot order
         @boot_order = [] if @boot_order == UNSET_VALUE
 
